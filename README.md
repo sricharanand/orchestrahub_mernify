@@ -29,13 +29,10 @@ Players can view, annotate, and share their marked-up music digitally.
 cd backend
 npm install
 npm run dev
+```
 ### 2️⃣ Frontend
+```bash
 cd frontend
 npm install
 npm start
-
-## 🧠 Next Steps
-
-Add annotation overlay (text & drawing)
-Role-based access for admins/players
-Option to download annotated PDFs
+```
