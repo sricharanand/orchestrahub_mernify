@@ -33,20 +33,23 @@ router.post("/create", upload.array("files"), async (req, res) => {
 router.post("/assign/:pieceId", async (req, res) => {
   try {
     const { pieceId } = req.params;
-    const { instrument, userIds } = req.body; // array of user IDs
+    const { instrument, userIds } = req.body;
 
     const piece = await Piece.findById(pieceId);
     const file = piece.files.find(f => f.instrument === instrument);
-    if (!file) return res.status(404).json({ msg: "File not found" });
+    if (!file) return res.status(404).json({ msg: "Instrument not found" });
 
-    file.assignedTo.push(...userIds);
+    // avoid duplicates
+    file.assignedTo = [...new Set([...file.assignedTo, ...userIds])];
     await piece.save();
+
     res.json(piece);
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: "Assignment error" });
   }
 });
+
 
 // Get all pieces (for admin)
 router.get("/", async (req, res) => {

@@ -42,4 +42,15 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// admin fetch instrumentalists for the role
+router.get("/users", async (req, res) => {
+  try {
+    const users = await User.find({}, "name email instrument role");
+    res.json(users);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Error fetching users" });
+  }
+});
+
 export default router;
