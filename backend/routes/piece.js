@@ -1,15 +1,27 @@
 import express from "express";
 import multer from "multer";
+import path from "path";
+import fs from "fs";
 import Piece from "../models/Piece.js";
 
 const router = express.Router();
+const dir = "uploads/annotations";
+if (!fs.existsSync(dir)) {
+  fs.mkdirSync(dir, { recursive: true });
+}
 
 // Storage setup for uploads
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) =>
-    cb(null, Date.now() + "-" + file.originalname.replace(/\s+/g, "_"))
+  destination: function (req, file, cb) {
+    cb(null, dir);
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname) || ".pdf";
+    const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, unique + ext);
+  },
 });
+
 const upload = multer({ storage });
 
 // Create a new piece
@@ -47,6 +59,32 @@ router.post("/assign/:pieceId", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: "Assignment error" });
+  }
+});
+
+router.post("/upload-annotation/:pieceId", upload.single("file"), async (req, res) => {
+  try {
+    const { pieceId } = req.params;
+    const { userId } = req.body;
+    const filePath = req.file.path.replace(/\\/g, "/"); // fix Windows slashes
+
+    const piece = await Piece.findById(pieceId);
+    if (!piece) return res.status(404).json({ msg: "Piece not found" });
+
+    // find the right file and attach this user's annotated copy
+    for (const f of piece.files) {
+      if (f.assignedTo.some(a => a.toString() === userId)) {
+        if (!f.annotatedPaths) f.annotatedPaths = {};
+        f.annotatedPaths[userId] = filePath;
+      }
+    }
+
+    await piece.save();
+    const updated = await Piece.findById(pieceId);
+    res.json({ msg: "Annotated copy uploaded", piece: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Upload error" });
   }
 });
 

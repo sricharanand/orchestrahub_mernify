@@ -31,7 +31,7 @@ async function seedAdmin() {
       instrument: "Conductor"
     });
     await admin.save();
-    console.log("👑 Admin user created:", adminEmail, "(password: admin123)");
+    console.log("👑 Admin user created:", adminEmail, "(password: admin)");
   } 
   else
     console.log("👑 Admin already exists.");
